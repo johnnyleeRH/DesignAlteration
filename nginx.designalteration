@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    ## next statement is important
+    server_name 192.168.56.112 www.192.168.56.112;
+    location / {
+	  include proxy_params;
+        proxy_pass http://unix:/home/lrh/designalteration.sock;
+    }
+}

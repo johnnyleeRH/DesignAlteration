@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve designalteration
+After=network.target
+
+[Service]
+User=lrh
+Group=www-data
+WorkingDirectory=/home/lrh/cmpshare/DesignAlteration
+Environment="PATH=/home/lrh/cmpshare/DesignAlteration/designalterationenv/bin"
+ExecStart=/home/lrh/cmpshare/DesignAlteration/designalterationenv/bin/gunicorn --workers 3 --bind unix:/home/lrh/designalteration.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
