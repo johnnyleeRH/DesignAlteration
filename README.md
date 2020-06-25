@@ -43,3 +43,7 @@
   - sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
   - sudo systemctl restart nginx
 - Securing the Application(`先不考虑`)
+- 安装python操作mysql组件`pip install PyMySQL`
+  - mysql root密码更改
+  - `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';`
+  - `mysql_native_password`
