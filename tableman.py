@@ -1,5 +1,8 @@
 import pymysql
 import sys
+import random
+import string
+from alterationlogging import alterationlog
 
 class TableMan:
   def __init__(self):
@@ -23,14 +26,35 @@ class TableMan:
         return True
     self.__sql = "create database alteration"
     try:
-      print("create db")
+      alterationlog.info("create db")
       self.__cur.execute(self.__sql)
     except:
       return False
     return True
   
   def createuserinfo(self):
-    print(sys._getframe().f_code.co_name)
+    alterationlog.info(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `userinfo`( \
+                  `user` VARCHAR(20) NOT NULL, \
+                  `passwd` VARCHAR(20) NOT NULL, \
+                  `groupid` INT NOT NULL DEFAULT 2, \
+                  PRIMARY KEY ( `user` ) \
+                )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
+    self.__sql = "SELECT COUNT(*) FROM userinfo;"
+    self.__cur.execute(self.__sql)
+    for i in range(1, 11):
+      userid = "yg%03d" % i
+      password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+      group = 2
+      if i < 4:
+        group = 1
+      self.__sql = "INSERT INTO userinfo \
+            (`user`, `passwd`, `groupid`) \
+            VALUES \
+            (%s, %s, %d);" % (repr(userid), repr(password), group)
+      self.__cur.execute(self.__sql)
+    self.__conn.commit()
     return True
   def createalteration(self):
     print(sys._getframe().f_code.co_name)
@@ -60,9 +84,9 @@ class TableMan:
     #扩展字段表（扩展字段均为text，重命名后再使用）
     target = ["userinfo", "alteration", "authorized", "preaudit", "audit", "reply", "extension"]
     tabletuple = self.__cur.fetchall()
-    for i in range(len(tabletuple)):
-      if tabletuple[i][0] in target:
-        target.remove(tabletuple[i][0])
+    # for i in range(len(tabletuple)):
+    #   if tabletuple[i][0] in target:
+    #     target.remove(tabletuple[i][0])
     if len(target) == 0:
       return True
     for i in range(len(target)):
