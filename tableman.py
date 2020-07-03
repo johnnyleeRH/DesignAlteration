@@ -32,6 +32,20 @@ class TableMan:
       return False
     return True
   
+  def checkuserlogin(self, name, passwd):
+    alterationlog.info("userlogin call [%s, %s]" % (name, passwd))
+    self.__sql = "SELECT passwd,groupid from userinfo where user=%s" % (repr(name))
+    self.__cur.execute(self.__sql)
+    passwdtuple = self.__cur.fetchall()
+    if 0 == len(passwdtuple):
+      return (False, 0)
+    alterationlog.info(passwdtuple[0][0])
+    alterationlog.info(passwdtuple[0][1])
+    if passwd != passwdtuple[0][0]:
+      return (False, 0)
+    groupid = passwdtuple[0][1]
+    return (True, groupid)
+
   def createuserinfo(self):
     alterationlog.info(sys._getframe().f_code.co_name)
     self.__sql = "CREATE TABLE IF NOT EXISTS `userinfo`( \
