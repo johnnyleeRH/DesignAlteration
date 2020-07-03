@@ -57,22 +57,102 @@ class TableMan:
     self.__conn.commit()
     return True
   def createalteration(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `alteration`( \
+                  `alterationid` INT NOT NULL, \
+                  `valid` BOOLEAN NOT NULL, \
+                  `alterationname` VARCHAR(20) NOT NULL, \
+                  `classify` INT NOT NULL, \
+                  `major` INT NOT NULL, \
+                  `createtime` datetime NOT NULL DEFAULT NOW(), \
+                  PRIMARY KEY ( `alterationid` ) \
+                )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
   def createauthorized(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `authorized`( \
+                  `status` INT NOT NULL DEFAULT 0, \
+                  `cost` DECIMAL(20, 2), \
+                  `clearway` INT, \
+                  `alterid` INT NOT NULL, \
+                  `major` INT NOT NULL, \
+                  `ext1` VARCHAR(20) DEFAULT NULL, \
+                  `ext2` VARCHAR(20) DEFAULT NULL, \
+                  `ext3` VARCHAR(20) DEFAULT NULL, \
+                  `ext4` VARCHAR(20) DEFAULT NULL, \
+                  `ext5` VARCHAR(20) DEFAULT NULL, \
+                  PRIMARY KEY ( `alterid` ), \
+                  CONSTRAINT `foreign_alter` FOREIGN KEY (`alterid`) \
+                    REFERENCES `alteration` (`alterationid`) ON DELETE CASCADE \
+                    ON UPDATE CASCADE \
+                  )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
   def createpreaudit(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `preaudit`( \
+                  `status` INT NOT NULL DEFAULT 0, \
+                  `cost` DECIMAL(20, 2) DEFAULT NULL, \
+                  `category` INT, \
+                  `alterid` INT NOT NULL, \
+                  `bureau` VARCHAR(20) DEFAULT NULL, \
+                  `pricereportno` VARCHAR(20) DEFAULT NULL, \
+                  `ext1` VARCHAR(20) DEFAULT NULL, \
+                  `ext2` VARCHAR(20) DEFAULT NULL, \
+                  `ext3` VARCHAR(20) DEFAULT NULL, \
+                  `ext4` VARCHAR(20) DEFAULT NULL, \
+                  `ext5` VARCHAR(20) DEFAULT NULL, \
+                  PRIMARY KEY ( `alterid` ), \
+                  CONSTRAINT `foreign_preaudit` FOREIGN KEY (`alterid`) \
+                    REFERENCES `alteration` (`alterationid`) ON DELETE CASCADE \
+                    ON UPDATE CASCADE \
+                  )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
   def createaudit(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `audit`( \
+                  `status` INT NOT NULL DEFAULT 0, \
+                  `cost` DECIMAL(20, 2), \
+                  `alterid` INT NOT NULL, \
+                  `replyno` VARCHAR(20), \
+                  `ext1` VARCHAR(20) DEFAULT NULL, \
+                  `ext2` VARCHAR(20) DEFAULT NULL, \
+                  `ext3` VARCHAR(20) DEFAULT NULL, \
+                  `ext4` VARCHAR(20) DEFAULT NULL, \
+                  `ext5` VARCHAR(20) DEFAULT NULL, \
+                  PRIMARY KEY ( `alterid` ), \
+                  CONSTRAINT `foreign_audit` FOREIGN KEY (`alterid`) \
+                    REFERENCES `alteration` (`alterationid`) ON DELETE CASCADE \
+                    ON UPDATE CASCADE \
+                  )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
   def createreply(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `reply`( \
+                  `cost` DECIMAL(20, 2), \
+                  `alterid` INT NOT NULL, \
+                  `src` INT NOT NULL, \
+                  `ext1` VARCHAR(20) DEFAULT NULL, \
+                  `ext2` VARCHAR(20) DEFAULT NULL, \
+                  `ext3` VARCHAR(20) DEFAULT NULL, \
+                  `ext4` VARCHAR(20) DEFAULT NULL, \
+                  `ext5` VARCHAR(20) DEFAULT NULL, \
+                  PRIMARY KEY ( `alterid` ), \
+                  CONSTRAINT `foreign_reply` FOREIGN KEY (`alterid`) \
+                    REFERENCES `alteration` (`alterationid`) ON DELETE CASCADE \
+                    ON UPDATE CASCADE \
+                  )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
   def createextension(self):
-    print(sys._getframe().f_code.co_name)
+    self.__sql = "CREATE TABLE IF NOT EXISTS `extension`( \
+                  `stage` VARCHAR(20) NOT NULL, \
+                  `ext1` VARCHAR(20) DEFAULT NULL, \
+                  `ext2` VARCHAR(20) DEFAULT NULL, \
+                  `ext3` VARCHAR(20) DEFAULT NULL, \
+                  `ext4` VARCHAR(20) DEFAULT NULL, \
+                  `ext5` VARCHAR(20) DEFAULT NULL, \
+                  PRIMARY KEY ( `stage` ) \
+                  )ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    self.__cur.execute(self.__sql)
     return True
 
   def checktable(self):
@@ -84,9 +164,9 @@ class TableMan:
     #扩展字段表（扩展字段均为text，重命名后再使用）
     target = ["userinfo", "alteration", "authorized", "preaudit", "audit", "reply", "extension"]
     tabletuple = self.__cur.fetchall()
-    # for i in range(len(tabletuple)):
-    #   if tabletuple[i][0] in target:
-    #     target.remove(tabletuple[i][0])
+    for i in range(len(tabletuple)):
+      if tabletuple[i][0] in target:
+        target.remove(tabletuple[i][0])
     if len(target) == 0:
       return True
     for i in range(len(target)):
