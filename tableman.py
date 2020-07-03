@@ -2,6 +2,7 @@ import pymysql
 import sys
 import random
 import string
+import time
 from alterationlogging import alterationlog
 
 class TableMan:
@@ -32,9 +33,41 @@ class TableMan:
       return False
     return True
   
+  def getnewid(self):
+    id = int(time.time())
+    while True:
+      self.__sql = "SELECT alterationid from alteration where alterationid=%d;" % id
+      self.__cur.execute(self.__sql)
+      if 0 == len(self.__cur.fetchall()):
+        break
+      id = id + 1
+    return id
+  
+  # return (true/false, alterationid)
+  def addnewalteration(self, kvmap):
+    alterationlog.info("add alteration called")
+    required = ["valid", "alterationname", "classify", "major"]
+    for key in required:
+      if key not in kvmap.keys():
+        return (False, 0)
+    id = self.getnewid()
+    try:
+      self.__sql = "INSERT INTO alteration \
+            (alterationid, valid, alterationname, classify, major) \
+            VALUES \
+            (%d, %r, %s, %d, %d);" % \
+            (id, kvmap["valid"], repr(kvmap["alterationname"]), kvmap["classify"], kvmap["major"])
+      alterationlog.info(self.__sql)
+      self.__cur.execute(self.__sql)
+      self.__conn.commit()
+    except:
+      alterationlog.info("add alteration %s failed" % kvmap["alterationname"])
+      return (False, 0)
+    return (True, id)
+  
   def checkuserlogin(self, name, passwd):
     alterationlog.info("userlogin call [%s, %s]" % (name, passwd))
-    self.__sql = "SELECT passwd,groupid from userinfo where user=%s" % (repr(name))
+    self.__sql = "SELECT passwd,groupid from userinfo where user=%s;" % (repr(name))
     self.__cur.execute(self.__sql)
     passwdtuple = self.__cur.fetchall()
     if 0 == len(passwdtuple):
@@ -70,6 +103,7 @@ class TableMan:
       self.__cur.execute(self.__sql)
     self.__conn.commit()
     return True
+
   def createalteration(self):
     self.__sql = "CREATE TABLE IF NOT EXISTS `alteration`( \
                   `alterationid` INT NOT NULL, \
@@ -88,7 +122,6 @@ class TableMan:
                   `cost` DECIMAL(20, 2), \
                   `clearway` INT, \
                   `alterid` INT NOT NULL, \
-                  `major` INT NOT NULL, \
                   `ext1` VARCHAR(20) DEFAULT NULL, \
                   `ext2` VARCHAR(20) DEFAULT NULL, \
                   `ext3` VARCHAR(20) DEFAULT NULL, \
