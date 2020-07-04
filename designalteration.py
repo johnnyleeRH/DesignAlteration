@@ -49,6 +49,32 @@ def addalteration():
     rsp["data"] = {}
     return jsonify(rsp)
 
+@app.route("/api/extension/qry", methods=['POST'])
+def listextension():
+    alterationlog.info("list extension.")
+    rsp = {}
+    rsp["data"] = {}
+    tableman.getextensionlist(rsp["data"])
+    if len(rsp["data"]) > 0:
+        rsp["code"] = 200
+        rsp["message"] = "success"
+    else:
+        rsp["code"] = 100004
+        rsp["message"] = "no valid record"
+    return jsonify(rsp)
+
+@app.route("/api/extension/update", methods=['POST'])
+def updateextension():
+    alterationlog.info("update extension.")
+    rsp = {}
+    if tableman.updateextension(request.json):
+        rsp["code"] = 200
+        rsp["message"] = "success"
+    else:
+        rsp["code"] = 100003
+        rsp["message"] = "invalid input"
+    return jsonify(rsp)
+
 @app.route("/api/alteration/list", methods=['POST'])
 def listalteration():
     alterationlog.info("list alteration.")

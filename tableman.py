@@ -33,6 +33,57 @@ class TableMan:
       return False
     return True
   
+  def updateextension(self, jsondata):
+    keys = ["authorized", "preaudit", "audit", "reply"]
+    for key in keys:
+      if key in jsondata.keys():
+        try:
+          self.__sql = "SELECT stage from extension where stage='%s';" % key
+          self.__cur.execute(self.__sql)
+          if len(self.__cur.fetchall()) > 0:
+            subseq = ""
+            for item in jsondata[key].keys():
+              subseq = subseq + ("%s='%s',") % (item, jsondata[key][item])
+            subseq = subseq.rstrip(',')
+            self.__sql = "UPDATE extension SET %s WHERE stage='%s';" % (subseq, key)
+            alterationlog.info(self.__sql)
+            self.__cur.execute(self.__sql)
+            self.__conn.commit()
+          else:
+            items = ['ext1', 'ext2', 'ext3', 'ext4', 'ext5']
+            subitem = "stage,"
+            values = "'" + key + "',"
+            for item in items:
+              if item in jsondata[key].keys():
+                subitem = subitem + item + ','
+                values = values + "'" + jsondata[key][item] + "',"
+            subitem = subitem.rstrip(',')
+            values = values.rstrip(',')
+            self.__sql = "INSERT INTO extension \
+              (%s) \
+              VALUES \
+              (%s);" % \
+              (subitem, values)
+            alterationlog.info(self.__sql)
+            self.__cur.execute(self.__sql)
+            self.__conn.commit()
+        except:
+          return False
+    return True
+
+  def getextensionlist(self, data):
+    keys = ["authorized", "preaudit", "audit", "reply"]
+    self.__sql = "SELECT * from extension;"
+    self.__cur.execute(self.__sql)
+    res = self.__cur.fetchall()
+    for index in range(0, len(res)):
+      if res[index][0] in keys:
+        data[res[index][0]] = {}
+        for id in range(1, len(res[index])):
+          if res[index][id] != None:
+            data[res[index][0]]["ext%d" % id] = res[index][id]
+    return True
+
   def getalterationlist(self, current, pagesize, data):
     alterationlog.info("get alteration list called")
     limitcnt = current * pagesize
