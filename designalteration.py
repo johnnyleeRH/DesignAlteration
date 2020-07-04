@@ -49,5 +49,43 @@ def addalteration():
     rsp["data"] = {}
     return jsonify(rsp)
 
+@app.route("/api/alteration/list", methods=['POST'])
+def listalteration():
+    alterationlog.info("list alteration.")
+    required = ["current", "pageSize"]
+    succ = True
+    for key in required:
+        if key not in request.json.keys():
+            succ = False
+            break
+    rsp = {}
+    if not succ:
+        rsp["code"] = 100003
+        rsp["message"] = "list alteration failed, invalid input"
+        rsp["data"] = {}
+        return jsonify(rsp)
+    cnt = tableman.alterationcnt()
+    if (request.json["current"] - 1) * request.json["pageSize"] >= cnt:
+        rsp["code"] = 100004
+        rsp["message"] = "no valid record"
+        rsp["data"] = {}
+        rsp["data"]["pagination"] = {}
+        rsp["data"]["pagination"]["total"] = \
+            int((cnt + request.json["pageSize"] - 1)/request.json["pageSize"])
+        rsp["data"]["pagination"]["current"] = request.json["current"]
+        rsp["data"]["pagination"]["pageSize"] = request.json["pageSize"]
+        rsp["data"]["data"] = []
+        return jsonify(rsp)
+    rsp["code"] = 200
+    rsp["data"] = {}
+    rsp["data"]["pagination"] = {}
+    rsp["data"]["pagination"]["total"] = \
+            int((cnt + request.json["pageSize"] - 1)/request.json["pageSize"])
+    rsp["data"]["pagination"]["current"] = request.json["current"]
+    rsp["data"]["pagination"]["pageSize"] = request.json["pageSize"]
+    rsp["data"]["data"] = []
+    tableman.getalterationlist(request.json["current"], request.json["pageSize"], rsp["data"]["data"])
+    return jsonify(rsp)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

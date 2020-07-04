@@ -2,7 +2,7 @@ import pymysql
 import sys
 import random
 import string
-import time
+import time, datetime
 from alterationlogging import alterationlog
 
 class TableMan:
@@ -32,6 +32,47 @@ class TableMan:
     except:
       return False
     return True
+  
+  def getalterationlist(self, current, pagesize, data):
+    alterationlog.info("get alteration list called")
+    limitcnt = current * pagesize
+    startcnt = (current - 1) * pagesize
+    #todo：优化内存的角度，可以优化
+    self.__sql = "SELECT * from alteration ORDER BY alterationid DESC limit %d;" % limitcnt
+    self.__cur.execute(self.__sql)
+    res = self.__cur.fetchall()
+    # alterationid valid alterationname classify major createtime
+    for index in range(startcnt, len(res)):
+      tmp = {}
+      tmp["id"] = res[index][0]
+      if res[index][1] == 0:
+        tmp["isvalid"] = False
+      else:
+        tmp["isvalid"] = True
+      tmp["name"] = res[index][2]
+      tmp["classify"] = res[index][3]
+      tmp["domain"] = res[index][4]
+      tmp["createtime"] = str(res[index][5])
+      self.__sql = "SELECT status from authorized where alterid=%d;" % res[index][0]
+      self.__cur.execute(self.__sql)
+      if len(self.__cur.fetchall()) > 0:
+        tmp["authorized"] = self.__cur.fetchall()[0][0]
+      self.__sql = "SELECT status from preaudit where alterid=%d;" % res[index][0]
+      self.__cur.execute(self.__sql)
+      if len(self.__cur.fetchall()) > 0:
+        tmp["preaudit"] = self.__cur.fetchall()[0][0]
+      self.__sql = "SELECT status from audit where alterid=%d;" % res[index][0]
+      self.__cur.execute(self.__sql)
+      if len(self.__cur.fetchall()) > 0:
+        tmp["audit"] = self.__cur.fetchall()[0][0]
+      data.append(tmp)
+    return True
+
+  def alterationcnt(self):
+    alterationlog.info("alteration count called")
+    self.__sql = "SELECT COUNT(*) FROM alteration;"
+    self.__cur.execute(self.__sql)
+    return self.__cur.fetchall()[0][0]
   
   def getnewid(self):
     id = int(time.time())
